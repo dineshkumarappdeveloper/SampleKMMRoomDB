@@ -164,28 +164,36 @@ class ObservableViewModel: ObservableObject {
     @Published var isAddingTodo: Bool = false
     @Published var errorMessage: String?
 
-    private var uiStateJob: Closeable?
+    private var timer: Timer?
 
     init(todoViewModel: TodoViewModel) {
         self.todoViewModel = todoViewModel
     }
 
     func startObserving() {
-        // Observe the UI state from the Kotlin ViewModel
-        uiStateJob = todoViewModel.uiState.collect { [weak self] uiState in
-            DispatchQueue.main.async {
-                self?.todos = uiState.todos
-                self?.newTodoTitle = uiState.newTodoTitle
-                self?.newTodoDescription = uiState.newTodoDescription
-                self?.isAddingTodo = uiState.isAddingTodo
-                self?.errorMessage = uiState.errorMessage
+        // Poll the UI state periodically (simple approach for KMP)
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if let uiState = self.todoViewModel.uiState.value as? TodoUiState {
+                DispatchQueue.main.async {
+                    self.todos = uiState.todos
+                    // Don't overwrite user input for title and description while typing
+                    // Only update when adding todo is in progress or completed
+                    if self.isAddingTodo && !uiState.isAddingTodo {
+                        // Todo was just added, clear the fields
+                        self.newTodoTitle = uiState.newTodoTitle
+                        self.newTodoDescription = uiState.newTodoDescription
+                    }
+                    self.isAddingTodo = uiState.isAddingTodo
+                    self.errorMessage = uiState.errorMessage
+                }
             }
         }
     }
 
     func stopObserving() {
-        uiStateJob?.close()
-        uiStateJob = nil
+        timer?.invalidate()
+        timer = nil
     }
 
     func addTodo() {

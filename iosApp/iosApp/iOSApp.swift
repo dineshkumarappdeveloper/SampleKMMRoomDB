@@ -8,7 +8,7 @@ struct iOSApp: App {
     init() {
         // Initialize Room database for iOS
         let database = DatabaseBuilderKt.getRoomDatabase(
-            builder: DatabaseBuilderKt.getDatabaseBuilder()
+            builder: DatabaseBuilder_iosKt.getDatabaseBuilder()
         )
         self.appContainer = AppContainer(database: database)
     }

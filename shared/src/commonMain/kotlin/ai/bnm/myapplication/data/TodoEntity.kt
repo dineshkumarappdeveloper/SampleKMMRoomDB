@@ -2,6 +2,7 @@ package ai.bnm.myapplication.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 
 @Entity
 data class TodoEntity(
@@ -10,5 +11,5 @@ data class TodoEntity(
     val title: String,
     val description: String,
     val isCompleted: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = Clock.System.now().toEpochMilliseconds()
 )
